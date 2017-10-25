@@ -5,10 +5,21 @@ export const SearchCardComponent = {
   bindings: {},
   template,
   controller: class SearchCardController {
-    constructor() {
+    flights;
+    series = ['flights', 'batima']
+
+    constructor(AirportService) {
       'ngInject';
       this.name = 'searchCard';
+      this.airport = AirportService;
+    }
 
+    $onInit() {
+      this.airport.getFlightDelays('SAN', 'DFW')
+        .then(res => {
+            console.log('filtered result: ', res)
+            this.flights = res;
+        });
     }
   }
 };

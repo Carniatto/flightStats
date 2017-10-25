@@ -1,7 +1,7 @@
 import angular from 'angular';
 import { AirportService } from "./airport.service";
 
-let AirportModule = angular.module('AirportModule', [
+let AirportModule = angular.module('airportModule', [
 
 ])
 
