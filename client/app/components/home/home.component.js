@@ -9,7 +9,7 @@ import './home.scss';
 * This component shows cards using the item binding for his own building.
 *
 **/
-export const homeComponent = {
+export const HomeComponent = {
   bindings: {},
   template,
   controller: class HomeController {

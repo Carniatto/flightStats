@@ -1,13 +1,14 @@
 import angular from 'angular';
-import uiRouter from 'angular-ui-router';
+import Chart from 'chart.js/src/chart.js';
+import chartjs from 'angular-chart.js';
 import { SearchCardComponent }  from './searchCard.component';
 
-let SearchCardModule = angular.module('searchCard', [
-  uiRouter
+export const SearchCardModule = angular.module('searchCard', [
+  chartjs
 ])
+
+
 
 .component('searchCard', SearchCardComponent)
 
 .name;
-
-export default SearchCardModule;

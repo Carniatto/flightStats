@@ -1,13 +1,13 @@
 import angular from 'angular';
 import uiRouter from 'angular-ui-router';
-import { homeComponent } from './home.component';
+import { HomeComponent } from './home.component';
 
 export const HomeModule = angular.module('home', [
   uiRouter
 ])
 
 .config(($stateProvider, $urlRouterProvider) => {
-  "ngInject";
+  'ngInject';
 
   $urlRouterProvider.otherwise('/');
 
@@ -18,6 +18,6 @@ export const HomeModule = angular.module('home', [
     });
 })
 
-.component('home', homeComponent)
-  
+.component('home', HomeComponent)
+
 .name;

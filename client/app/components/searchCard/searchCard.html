@@ -1,4 +1,6 @@
 <div class="content">
-  {{ $ctrl.name }}
-
+  <canvas class="chart chart-bar"
+    chart-data="$ctrl.flights.data"
+    chart-labels="$ctrl.flights.labels">
+  </canvas>
 </div>
