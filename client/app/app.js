@@ -6,11 +6,17 @@ import Services from './services/services.module';
 import AppComponent from './app.component';
 import 'normalize.css';
 
+import 'angular-animate';
+import 'angular-aria';
+import 'angular-material';
+
+
 angular.module('app', [
     uiRouter,
     Common,
     Components,
-    Services
+    Services,
+    'ngMaterial'
   ])
   .config(($locationProvider) => {
     "ngInject";
