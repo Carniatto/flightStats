@@ -4,11 +4,30 @@ import moment from 'moment';
 
 export class AirportService {
   parsedData;
+  fetchPromise;
+  initial = {
+    'data': [],
+    'labels': []
+  };
 
   constructor($http, $q) {
     'ngInject';
     this.$http = $http;
     this.$q = $q;
+    this.fetchCsv().then(
+      res => {
+        let origins = _.uniq(res.map(x => x.ORIGIN));
+        // console.log(origins)
+        this.$http.get('../../assets/airports-usa.json')
+          .then(
+            airports => {
+              console.log(typeof airports.data, airports.data)
+              console.log(airports.data.filter( air => _.includes(origins, air.iata)).map(airport => ({'name': airport.name, 'code': airport.iata}))
+              )
+            }
+        )
+      }
+    )
   }
 
   getModel() {
@@ -17,7 +36,9 @@ export class AirportService {
     return defer.promise;
   }
 
+
   fetchCsv() {
+    console.log('fetch called');
     return this.$http.get('../../assets/FlightDelays.csv')
       .then(
         res => {
@@ -43,48 +64,82 @@ export class AirportService {
         map[headers[i]] = val;
         return map;
       }, {});
+    }).map((flight) => {
+      let ratio = (flight.ARR_DELAY/flight.CRS_ELAPSED_TIME)*100;
+      return {
+        'WEEK_DAY': moment(flight.FL_DATE, 'YYYY-MM-DD').format('ddd'),
+        'CRS_DEP_TIME_INT': this.roundTime(flight.CRS_DEP_TIME+''),
+        'ARR_DELAY_BIN': Math.floor(flight.ARR_DELAY/10)*10,
+        'DELAY_RATIO_BIN': Math.floor(ratio/10)*10,
+        ...flight
+      }
     });
   }
 
-  getFlightDelays(origin, dest) {
-    return this.getModel()
-      .then(
-        data => {
-          let initial = {
-            'data': [],
-            'labels': []
-          };
-
-          return _.chain(data)
-            .filter({'ORIGIN': origin, 'DEST': dest})
-            .filter(({ARR_DELAY}) => ARR_DELAY > 0)
-            .map((flight) => {
-              flight = this.roundTime(flight);
-              return {
-                'WEEK_DAY': moment(flight.FL_DATE, 'YYYY-MM-DD').format('ddd')+' - '+ flight.CRS_DEP_TIME,
-                ...flight
-              }
-            })
-            .groupBy('WEEK_DAY')
-            .tap(x => console.log(x))
-            .reduce( (acc, value, key) => {
-              acc.data.push(value.length);
-              acc.labels.push(key);
-              return acc;
-            }, initial)
-            .value()
-          }
-      );
+  filterflights(data, origin, dest, query) {
+    return _.chain(data)
+    .filter({'ORIGIN': origin, 'DEST': dest})
+    .filter(({WEEK_DAY}) => {
+      if(!query) return true;
+      return (WEEK_DAY == query);
+    }).value()
   }
 
-  roundTime(data) {
-    let hour = data.CRS_DEP_TIME.slice(0,2);
-    let min = data.CRS_DEP_TIME.slice(2,4);
-    let rounded = parseInt(hour) + (Math.round(parseInt(min)/60));
-    console.log(data.CRS_DEP_TIME, rounded)
-    debugger
-    data.CRS_DEP_TIME = rounded;
-    return data;
+  getFlightDelays(origin, dest, query) {
+    // return this.getModel()
+    //   .then(
+    //     data => {
+          return _.chain(this.parsedData)
+            .filter({'ORIGIN': origin, 'DEST': dest})
+            .groupBy('ARR_DELAY_BIN')
+            // sorts by Arrival Delay
+            .reduce( (acc, value, key) => {
+              acc.push({'value': value.length, 'key': +key});
+              return acc;
+            }, [])
+            .sortBy('key')
+            // builds the series for plotting
+            .reduce( (acc, item, key) => {
+              acc.data.push(item.value)
+              acc.labels.push(item.key);
+              return acc;
+            }, this.initial)
+            .value()
+      //     }
+      // );
+  }
+
+  getFlightDelayRatios(origin, dest, query) {
+    // return this.getModel()
+    //   .then(
+    //     data => {
+          return _.chain(this.parsedData)
+            .filter({'ORIGIN': origin, 'DEST': dest})
+            .groupBy('DELAY_RATIO_BIN')
+            // sorts by Delay Ratio
+            .reduce( (acc, value, key) => {
+              acc.push({'value': value.length, 'key': +key});
+              return acc;
+            }, [])
+            .sortBy('key')
+            // builds the series for plotting
+            .reduce( (acc, item, key) => {
+              acc.data.push(item.value)
+              acc.labels.push(item.key+'%');
+              return acc;
+            }, this.initial)
+            .value()
+      //     }
+      // );
+  }
+
+  roundTime(time) {
+    let hour = time.slice(0,2);
+    let min = time.slice(2,4);
+    hour = (parseInt(hour) + (Math.round(parseInt(min)/60)))%24;
+    min = (Math.round(parseInt(min)/30) * 30)%60;
+    min = min < 10 ? `0${min}` : `${min}`;
+    return `${hour}${min}`;
   }
 
 }
