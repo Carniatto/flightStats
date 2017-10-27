@@ -14,6 +14,20 @@ export class AirportService {
     'ngInject';
     this.$http = $http;
     this.$q = $q;
+    this.fetchCsv().then(
+      res => {
+        let origins = _.uniq(res.map(x => x.ORIGIN));
+        // console.log(origins)
+        this.$http.get('../../assets/airports-usa.json')
+          .then(
+            airports => {
+              console.log(typeof airports.data, airports.data)
+              console.log(airports.data.filter( air => _.includes(origins, air.iata)).map(airport => ({'name': airport.name, 'code': airport.iata}))
+              )
+            }
+        )
+      }
+    )
   }
 
   getModel() {
@@ -21,6 +35,7 @@ export class AirportService {
     defer.resolve(this.parsedData || this.fetchCsv());
     return defer.promise;
   }
+
 
   fetchCsv() {
     console.log('fetch called');
