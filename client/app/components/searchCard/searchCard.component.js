@@ -7,29 +7,48 @@ export const SearchCardComponent = {
   controller: class SearchCardController {
     flights;
     flightsRatio;
-    query = '';
-    series = [[this.fetchFlight]];
+    options;
 
     constructor(AirportService) {
       'ngInject';
       this.name = 'searchCard';
-      this.airport = AirportService;
+      this.airService = AirportService;
+      this.histogramOptionsDelay = this.getHistogramOptions('Delay (mins)');
+      this.histogramOptionsDelayRatio = this.getHistogramOptions('Delay Ratio (%)');
     }
 
     $onInit() {
-      console.log('request flight');
-      this.flights = this.airport.getFlightDelays('SAN', 'DFW', this.query)
-      this.flightsRatio = this.airport.getFlightDelayRatios('SAN', 'DFW', this.query)
     }
 
-    fetchFlight() {
-      this.flights = this.airport.getFlightDelays('SAN', 'DFW', this.query)
-      this.flightsRatio = this.airport.getFlightDelayRatios('SAN', 'DFW', this.query)
+    getHistogramOptions(xTitle) {
+      return {
+        scales: {
+          yAxes: [{
+             ticks: { beginAtZero:true },
+             scaleLabel: {
+               display: true,
+               labelString: 'Frequency (Flight count)'
+             }
+          }],
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: xTitle
+            }
+          }]
+        }
+      }
+    }
+
+    fetchFlight(origin, destination) {
+      this.flights = this.airService.getFlightDelays(origin, destination)
+      this.flightsRatio = this.airService.getFlightDelayRatios(origin, destination)
     }
 
     searchData(query) {
       console.log('origin', query.origin);
       console.log('destination', query.destination);
+      this.fetchFlight(query.origin, query.destination);
     }
   }
 };

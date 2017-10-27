@@ -13,17 +13,10 @@ export const AirportSelectorComponent = {
 
       this.originAirport = '';
       this.destinationAirport = '';
+      this.airService = AirportService;
 
-      this.airports = [
-        {'name': 'airport a', 'code': 'AA'},
-        {'name': 'airport b', 'code': 'AB'},
-        {'name': 'airport c', 'code': 'AC'},
-        {'name': 'airport d', 'code': 'AD'},
-        {'name': 'airport e', 'code': 'AE'},
-        {'name': 'airport f', 'code': 'AF'},
-        {'name': 'airport g', 'code': 'AG'},
-        {'name': 'airport h', 'code': 'AH'}
-      ];
+      this.allOrigins = this.airService.getAirportOrigins();
+      this.allDestinations = this.airService.getAirportDestinations();
     }
 
     search() {
@@ -34,6 +27,14 @@ export const AirportSelectorComponent = {
           destination: this.destinationAirport
         },
       });
+    }
+
+    fetchOrigin() {
+      this.possibleOrigins = this.airService.getAirportOrigins(this.destinationAirport);
+    }
+
+    fetchDestination() {
+      this.possibleDestinations = this.airService.getAirportDestinations(this.originAirport);
     }
   }
 };

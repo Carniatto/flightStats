@@ -2,19 +2,20 @@
   <airport-selector
     on-search="$ctrl.searchData($event)">
   </airport-selector>
-  <div>
+  <div ng-if="$ctrl.flights">
     <canvas class="chart chart-bar"
       chart-data="[$ctrl.flights.data]"
       chart-series="['Delay']"
-      chart-labels="$ctrl.flights.labels">
+      chart-labels="$ctrl.flights.labels"
+      chart-options="$ctrl.histogramOptionsDelay">
     </canvas>
   </div>
-  <hr>
-  <div>
+  <div ng-if="$ctrl.flightsRatio">
     <canvas class="chart chart-bar"
     chart-data="[$ctrl.flightsRatio.data]"
     chart-series="['Delay Ratio']"
-    chart-labels="$ctrl.flightsRatio.labels">
+    chart-labels="$ctrl.flightsRatio.labels"
+    chart-options="$ctrl.histogramOptionsDelayRatio">
     </canvas>
   </div>
 </div>

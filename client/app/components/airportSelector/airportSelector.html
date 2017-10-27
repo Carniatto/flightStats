@@ -1,8 +1,9 @@
 <div class="nav-area">
   <md-input-container>
     <label>Origin</label>
-    <md-select ng-model="$ctrl.originAirport">
-      <md-option ng-repeat="airport in $ctrl.airports" ng-value="airport.code">
+    <md-select ng-model="$ctrl.originAirport" ng-change="$ctrl.fetchDestination()">
+      <md-option ng-value=""><em>None</em></md-option>
+      <md-option ng-repeat="airport in ($ctrl.possibleOrigins || $ctrl.allOrigins)" ng-value="airport.code">
         {{airport.name}}
       </md-option>
     </md-select>
@@ -10,12 +11,13 @@
 
   <md-input-container>
     <label>Destination</label>
-    <md-select ng-model="$ctrl.destinationAirport">
-      <md-option ng-repeat="airport in $ctrl.airports" ng-value="airport.code">
+    <md-select ng-model="$ctrl.destinationAirport" ng-change="$ctrl.fetchOrigin()">
+      <md-option ng-value=""><em>None</em></md-option>
+      <md-option ng-repeat="airport in ($ctrl.possibleDestinations || $ctrl.allDestinations)" ng-value="airport.code">
         {{airport.name}}
       </md-option>
     </md-select>
   </md-input-container>
 
-  <md-button ng-click="$ctrl.search()">Go!</md-button>
+  <md-button ng-click="$ctrl.search()"><b>Go!</b></md-button>
 </div>
