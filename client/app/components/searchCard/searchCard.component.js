@@ -8,6 +8,7 @@ export const SearchCardComponent = {
     flights;
     flightsRatio;
     query = '';
+    series = [[this.fetchFlight]];
 
     constructor(AirportService) {
       'ngInject';
@@ -16,28 +17,19 @@ export const SearchCardComponent = {
     }
 
     $onInit() {
-      this.airport.fetchCsv().then(
-        () => this.fetchFlight()
-      )
+      console.log('request flight');
+      this.flights = this.airport.getFlightDelays('SAN', 'DFW', this.query)
+      this.flightsRatio = this.airport.getFlightDelayRatios('SAN', 'DFW', this.query)
     }
 
     fetchFlight() {
       this.flights = this.airport.getFlightDelays('SAN', 'DFW', this.query)
-        // .then(res => {
-        //   console.log('filtered result: ', res)
-        //   this.flights = res/* {
-        //     data: res.map(({value}) => value),
-        //     labels: res.map(({key}) => key+'%')
-        //   }; */
-        // });
-      this.flights = this.airport.getFlightDelayRatios('SAN', 'DFW', this.query)
-        // .then(res => {
-        //   console.log('filtered result ratio: ', res)
-        //   this.flightsRatio = res/* {
-        //     data: res.map(({value}) => value),
-        //     labels: res.map(({key}) => key+'%')
-        //   }; */
-        // });
+      this.flightsRatio = this.airport.getFlightDelayRatios('SAN', 'DFW', this.query)
+    }
+
+    searchData(query) {
+      console.log('origin', query.origin);
+      console.log('destination', query.destination);
     }
   }
 };

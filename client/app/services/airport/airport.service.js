@@ -14,20 +14,20 @@ export class AirportService {
     'ngInject';
     this.$http = $http;
     this.$q = $q;
-    this.fetchCsv().then(
-      res => {
-        let origins = _.uniq(res.map(x => x.ORIGIN));
-        // console.log(origins)
-        this.$http.get('../../assets/airports-usa.json')
-          .then(
-            airports => {
-              console.log(typeof airports.data, airports.data)
-              console.log(airports.data.filter( air => _.includes(origins, air.iata)).map(airport => ({'name': airport.name, 'code': airport.iata}))
-              )
-            }
-        )
-      }
-    )
+    // this.fetchCsv().then(
+    //   res => {
+    //     let origins = _.uniq(res.map(x => x.ORIGIN));
+    //     // console.log(origins)
+        // this.$http.get('../../assets/airports-usa.json')
+        //   .then(
+    //         airports => {
+    //           console.log(typeof airports.data, airports.data)
+    //           console.log(airports.data.filter( air => _.includes(origins, air.iata)).map(airport => ({'name': airport.name, 'code': airport.iata}))
+    //           )
+    //         }
+    //     )
+    //   }
+    // )
   }
 
   getModel() {
@@ -37,20 +37,35 @@ export class AirportService {
   }
 
 
-  fetchCsv() {
+  fetchFiles() {
     console.log('fetch called');
+    return this.fetchCsv().then(
+        /* success callback */
+        () => this.fetchAirportJson().then(
+          /* success callback */
+          () => console.info('files ready')
+      ),
+      /* error callback */
+      error => console.error(error)
+    );
+  }
+
+  fetchCsv() {
     return this.$http.get('../../assets/FlightDelays.csv')
+    .then(
+      flightCsv => {
+        //success callback
+        this.parsedData = this.parseCsv2Json(flightCsv.data);
+      });
+  }
+
+  fetchAirportJson() {
+    return this.$http.get('../../assets/airports-usa.json')
       .then(
-        res => {
-          //success callback
-          this.parsedData = this.parseCsv2Json(res.data);
-          return this.parsedData;
-        },
-        err => {
-          //error callback
-          console.error(err);
-        }
-      );
+        airportsJson => {
+          this.airports = airportsJson.data;
+
+        })
   }
 
   parseCsv2Json(csv) {
@@ -73,7 +88,9 @@ export class AirportService {
         'DELAY_RATIO_BIN': Math.floor(ratio/10)*10,
         ...flight
       }
-    });
+    }).filter(
+      flight => flight.ARR_DELAY > 0
+    );
   }
 
   filterflights(data, origin, dest, query) {
@@ -86,51 +103,41 @@ export class AirportService {
   }
 
   getFlightDelays(origin, dest, query) {
-    // return this.getModel()
-    //   .then(
-    //     data => {
-          return _.chain(this.parsedData)
-            .filter({'ORIGIN': origin, 'DEST': dest})
-            .groupBy('ARR_DELAY_BIN')
-            // sorts by Arrival Delay
-            .reduce( (acc, value, key) => {
-              acc.push({'value': value.length, 'key': +key});
-              return acc;
-            }, [])
-            .sortBy('key')
-            // builds the series for plotting
-            .reduce( (acc, item, key) => {
-              acc.data.push(item.value)
-              acc.labels.push(item.key);
-              return acc;
-            }, this.initial)
-            .value()
-      //     }
-      // );
+    return _.chain(this.parsedData)
+      .filter({'ORIGIN': origin, 'DEST': dest})
+      .groupBy('ARR_DELAY_BIN')
+      // sorts by Arrival Delay
+      .reduce( (acc, value, key) => {
+        acc.push({'value': value.length, 'key': +key});
+        return acc;
+      }, [])
+      .sortBy('key')
+      // builds the series for plotting
+      .reduce( (acc, item, key) => {
+        acc.data.push(item.value)
+        acc.labels.push(`${item.key} - ${item.key+10}`);
+        return acc;
+      }, _.cloneDeep(this.initial))
+      .value()
   }
 
   getFlightDelayRatios(origin, dest, query) {
-    // return this.getModel()
-    //   .then(
-    //     data => {
-          return _.chain(this.parsedData)
-            .filter({'ORIGIN': origin, 'DEST': dest})
-            .groupBy('DELAY_RATIO_BIN')
-            // sorts by Delay Ratio
-            .reduce( (acc, value, key) => {
-              acc.push({'value': value.length, 'key': +key});
-              return acc;
-            }, [])
-            .sortBy('key')
-            // builds the series for plotting
-            .reduce( (acc, item, key) => {
-              acc.data.push(item.value)
-              acc.labels.push(item.key+'%');
-              return acc;
-            }, this.initial)
-            .value()
-      //     }
-      // );
+    return _.chain(this.parsedData)
+      .filter({'ORIGIN': origin, 'DEST': dest})
+      .groupBy('DELAY_RATIO_BIN')
+      // sorts by Delay Ratio
+      .reduce( (acc, value, key) => {
+        acc.push({'value': value.length, 'key': +key});
+        return acc;
+      }, [])
+      .sortBy('key')
+      // builds the series for plotting
+      .reduce( (acc, item, key) => {
+        acc.data.push(item.value)
+        acc.labels.push(`${item.key}% - ${item.key+10}%`);
+        return acc;
+      }, _.cloneDeep(this.initial))
+      .value()
   }
 
   roundTime(time) {
