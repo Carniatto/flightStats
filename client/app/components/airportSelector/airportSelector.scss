@@ -1,0 +1,10 @@
+.nav-area {
+  display: flex;
+  width: 70%;
+  height: 60px;
+  justify-content: space-around;
+  margin: 0 auto 30px;
+  md-input-container {
+    width: 200px;
+  }
+}

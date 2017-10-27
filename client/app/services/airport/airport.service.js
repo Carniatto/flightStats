@@ -30,6 +30,12 @@ export class AirportService {
     )
   }
 
+  getAirports() {
+    return this.fetchCsv().then( res => {
+      return _.uniq(res.map(obj => obj.ORIGIN));
+    });
+  }
+
   getModel() {
     let defer = this.$q.defer();
     defer.resolve(this.parsedData || this.fetchCsv());

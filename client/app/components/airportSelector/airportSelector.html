@@ -1,0 +1,19 @@
+<div class="nav-area">
+  <md-input-container>
+    <label>Origin</label>
+    <md-select ng-model="$ctrl.userOrigin">
+      <md-option ng-repeat="airport in $ctrl.airports" ng-value="airport.code">
+        {{airport.name}}
+      </md-option>
+    </md-select>
+  </md-input-container>
+
+  <md-input-container>
+    <label>Destination</label>
+    <md-select ng-model="$ctrl.userDestination">
+      <md-option ng-repeat="airport in $ctrl.airports" ng-value="airport.code">
+        {{airport.name}}
+      </md-option>
+    </md-select>
+  </md-input-container>
+</div>
