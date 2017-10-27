@@ -5,6 +5,7 @@ import moment from 'moment';
 export class AirportService {
   parsedData;
   fetchPromise;
+  airports;
   initial = {
     'data': [],
     'labels': []
@@ -14,26 +15,6 @@ export class AirportService {
     'ngInject';
     this.$http = $http;
     this.$q = $q;
-    this.fetchCsv().then(
-      res => {
-        let origins = _.uniq(res.map(x => x.ORIGIN));
-        // console.log(origins)
-        this.$http.get('../../assets/airports-usa.json')
-          .then(
-            airports => {
-              console.log(typeof airports.data, airports.data)
-              console.log(airports.data.filter( air => _.includes(origins, air.iata)).map(airport => ({'name': airport.name, 'code': airport.iata}))
-              )
-            }
-        )
-      }
-    )
-  }
-
-  getAirports() {
-    return this.fetchCsv().then( res => {
-      return _.uniq(res.map(obj => obj.ORIGIN));
-    });
   }
 
   getModel() {
@@ -42,21 +23,37 @@ export class AirportService {
     return defer.promise;
   }
 
+  fetchFiles() {
+    console.log('fetch called');
+    console.time('fetch');
+    return this.fetchCsv().then(
+        /* success callback */
+        () => this.fetchAirportJson().then(
+          /* success callback */
+          () => console.timeEnd('fetch')
+      ),
+      /* error callback */
+      error => console.error(error)
+    );
+  }
 
   fetchCsv() {
-    console.log('fetch called');
     return this.$http.get('../../assets/FlightDelays.csv')
+    .then(
+      flightCsv => {
+        //success callback
+        this.parsedData = this.parseCsv2Json(flightCsv.data);
+        this.origins = _.uniq(this.parsedData.map(airport => airport.ORIGIN));
+        this.destinations = _.uniq(this.parsedData.map(airport => airport.DEST));
+      });
+  }
+
+  fetchAirportJson() {
+    return this.$http.get('../../assets/airports-usa.json')
       .then(
-        res => {
-          //success callback
-          this.parsedData = this.parseCsv2Json(res.data);
-          return this.parsedData;
-        },
-        err => {
-          //error callback
-          console.error(err);
-        }
-      );
+        airportsJson => {
+          this.airports = this.parseAirportJson(airportsJson.data);
+        })
   }
 
   parseCsv2Json(csv) {
@@ -79,7 +76,61 @@ export class AirportService {
         'DELAY_RATIO_BIN': Math.floor(ratio/10)*10,
         ...flight
       }
-    });
+    }).filter(
+      flight => flight.ARR_DELAY > 0
+    );
+  }
+
+  parseAirportJson(airports) {
+    return airports.map(
+      airport => ({
+        'code': airport.iata,
+        'name': airport.name,
+        'tz': airport.tz
+      })
+    )
+  }
+
+  getAirportOrigins(destination) {
+    let origins = this.parsedData
+      .filter(flight => {
+        if (destination) {
+          return (flight.DEST == destination)
+        }
+        return true;
+      })
+      .map( flight => flight.ORIGIN);
+
+    return _.chain(origins)
+      .uniq()
+      .map( origin => {
+        return _.find(this.airports, airport => {
+          return (airport.code == origin)
+        })
+      })
+      .sortBy('name')
+      .value()
+  }
+
+  getAirportDestinations(origin) {
+    let dests = this.parsedData
+      .filter(flight => {
+        if (origin) {
+          return (flight.ORIGIN == origin)
+        }
+        return true;
+      })
+      .map( flight => flight.DEST);
+
+    return _.chain(dests)
+      .uniq()
+      .map( dest => {
+        return _.find(this.airports, airport => {
+          return (airport.code == dest)
+        })
+      })
+      .sortBy('name')
+      .value()
   }
 
   filterflights(data, origin, dest, query) {
@@ -92,51 +143,42 @@ export class AirportService {
   }
 
   getFlightDelays(origin, dest, query) {
-    // return this.getModel()
-    //   .then(
-    //     data => {
-          return _.chain(this.parsedData)
-            .filter({'ORIGIN': origin, 'DEST': dest})
-            .groupBy('ARR_DELAY_BIN')
-            // sorts by Arrival Delay
-            .reduce( (acc, value, key) => {
-              acc.push({'value': value.length, 'key': +key});
-              return acc;
-            }, [])
-            .sortBy('key')
-            // builds the series for plotting
-            .reduce( (acc, item, key) => {
-              acc.data.push(item.value)
-              acc.labels.push(item.key);
-              return acc;
-            }, this.initial)
-            .value()
-      //     }
-      // );
+    return _.chain(this.parsedData)
+      .filter({'ORIGIN': origin, 'DEST': dest})
+      .groupBy('ARR_DELAY_BIN')
+      // sorts by Arrival Delay
+      .reduce( (acc, value, key) => {
+        acc.push({'value': value.length, 'key': +key});
+        return acc;
+      }, [])
+      .sortBy('key')
+      // builds the series for plotting
+      .reduce( (acc, item, key) => {
+        acc.data.push(item.value)
+        acc.labels.push(`${item.key} - ${item.key+10}`);
+        return acc;
+      }, _.cloneDeep(this.initial))
+      .tap(x => console.log(x))
+      .value()
   }
 
   getFlightDelayRatios(origin, dest, query) {
-    // return this.getModel()
-    //   .then(
-    //     data => {
-          return _.chain(this.parsedData)
-            .filter({'ORIGIN': origin, 'DEST': dest})
-            .groupBy('DELAY_RATIO_BIN')
-            // sorts by Delay Ratio
-            .reduce( (acc, value, key) => {
-              acc.push({'value': value.length, 'key': +key});
-              return acc;
-            }, [])
-            .sortBy('key')
-            // builds the series for plotting
-            .reduce( (acc, item, key) => {
-              acc.data.push(item.value)
-              acc.labels.push(item.key+'%');
-              return acc;
-            }, this.initial)
-            .value()
-      //     }
-      // );
+    return _.chain(this.parsedData)
+      .filter({'ORIGIN': origin, 'DEST': dest})
+      .groupBy('DELAY_RATIO_BIN')
+      // sorts by Delay Ratio
+      .reduce( (acc, value, key) => {
+        acc.push({'value': value.length, 'key': +key});
+        return acc;
+      }, [])
+      .sortBy('key')
+      // builds the series for plotting
+      .reduce( (acc, item, key) => {
+        acc.data.push(item.value)
+        acc.labels.push(`${item.key}% - ${item.key+10}%`);
+        return acc;
+      }, _.cloneDeep(this.initial))
+      .value()
   }
 
   roundTime(time) {

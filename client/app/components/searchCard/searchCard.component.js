@@ -7,37 +7,48 @@ export const SearchCardComponent = {
   controller: class SearchCardController {
     flights;
     flightsRatio;
-    query = '';
+    options;
 
     constructor(AirportService) {
       'ngInject';
       this.name = 'searchCard';
-      this.airport = AirportService;
+      this.airService = AirportService;
+      this.histogramOptionsDelay = this.getHistogramOptions('Delay (mins)');
+      this.histogramOptionsDelayRatio = this.getHistogramOptions('Delay Ratio (%)');
     }
 
     $onInit() {
-      this.airport.fetchCsv().then(
-        () => this.fetchFlight()
-      )
     }
 
-    fetchFlight() {
-      this.flights = this.airport.getFlightDelays('SAN', 'DFW', this.query)
-        // .then(res => {
-        //   console.log('filtered result: ', res)
-        //   this.flights = res/* {
-        //     data: res.map(({value}) => value),
-        //     labels: res.map(({key}) => key+'%')
-        //   }; */
-        // });
-      this.flights = this.airport.getFlightDelayRatios('SAN', 'DFW', this.query)
-        // .then(res => {
-        //   console.log('filtered result ratio: ', res)
-        //   this.flightsRatio = res/* {
-        //     data: res.map(({value}) => value),
-        //     labels: res.map(({key}) => key+'%')
-        //   }; */
-        // });
+    getHistogramOptions(xTitle) {
+      return {
+        scales: {
+          yAxes: [{
+             ticks: { beginAtZero:true },
+             scaleLabel: {
+               display: true,
+               labelString: 'Frequency (Flight count)'
+             }
+          }],
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: xTitle
+            }
+          }]
+        }
+      }
+    }
+
+    fetchFlight(origin, destination) {
+      this.flights = this.airService.getFlightDelays(origin, destination)
+      this.flightsRatio = this.airService.getFlightDelayRatios(origin, destination)
+    }
+
+    searchData(query) {
+      console.log('origin', query.origin);
+      console.log('destination', query.destination);
+      this.fetchFlight(query.origin, query.destination);
     }
   }
 };
