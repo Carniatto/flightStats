@@ -1,6 +1,7 @@
+import { AIRPORT_TYPE } from '../../services/airport/airport.constants';
+
 import template from './airportSelector.html';
 import './airportSelector.scss';
-import './../../services/airport/airport.service';
 
 export const AirportSelectorComponent = {
   bindings: {
@@ -15,8 +16,8 @@ export const AirportSelectorComponent = {
       this.destinationAirport = '';
       this.airService = AirportService;
 
-      this.allOrigins = this.airService.getAirportOrigins();
-      this.allDestinations = this.airService.getAirportDestinations();
+      this.allOrigins = this.airService.getAirports(AIRPORT_TYPE.ORIGIN);
+      this.allDestinations = this.airService.getAirports(AIRPORT_TYPE.DEST);
     }
 
     search() {
@@ -30,11 +31,11 @@ export const AirportSelectorComponent = {
     }
 
     fetchOrigin() {
-      this.possibleOrigins = this.airService.getAirportOrigins(this.destinationAirport);
+      this.possibleOrigins = this.airService.getAirports(AIRPORT_TYPE.ORIGIN, this.destinationAirport);
     }
 
     fetchDestination() {
-      this.possibleDestinations = this.airService.getAirportDestinations(this.originAirport);
+      this.possibleDestinations = this.airService.getAirports(AIRPORT_TYPE.DEST, this.originAirport);
     }
   }
 };

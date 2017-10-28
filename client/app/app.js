@@ -9,7 +9,7 @@ import 'normalize.css';
 import 'angular-animate';
 import 'angular-aria';
 import 'angular-material';
-
+import 'angular-material/angular-material.css';
 
 angular.module('app', [
     uiRouter,
@@ -18,7 +18,7 @@ angular.module('app', [
     Services,
     'ngMaterial'
   ])
-  .config(($locationProvider, ChartJsProvider) => {
+  .config(($locationProvider) => {
     "ngInject";
     // @see: https://github.com/angular-ui/ui-router/wiki/Frequently-Asked-Questions
     // #how-to-configure-your-server-to-work-with-html5mode

@@ -1,13 +1,20 @@
-home {
- .content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 100vh;
- }
+@import '../../app.scss';
 
- .title {
-     font-size: 4em;
-     color: #BBD0E3;
- }
+.content {
+  display: flex;
+  flex-direction: column;
+  transition: all 500ms;
+  align-items: center;
+  width: 100%;
+}
+
+.title {
+  //text-align: center;
+  font-size: 4em;
+  color: $main-color;
+}
+
+h2 {
+  //text-align: center;
+  color:  $main-color;
 }

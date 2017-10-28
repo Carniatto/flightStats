@@ -1,0 +1,8 @@
+<div class="graph" ng-if="$ctrl.data">
+  <canvas class="chart chart-bar"
+          chart-data="[$ctrl.data.data]"
+          chart-series="['flight count']"
+          chart-labels="$ctrl.data.labels"
+          chart-options="$ctrl.options">
+  </canvas>
+</div>

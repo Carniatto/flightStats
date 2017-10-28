@@ -1,10 +1,11 @@
 import angular from 'angular';
 import uiRouter from 'angular-ui-router';
+import chartjs from 'angular-chart.js';
 import { HomeComponent } from './home.component';
-import { AirportService } from "../../services/airport/airport.service";
 
 export const HomeModule = angular.module('home', [
-  uiRouter
+  uiRouter,
+  chartjs
 ])
 
 .config(($stateProvider, $urlRouterProvider) => {

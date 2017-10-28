@@ -1,11 +1,10 @@
-
 import * as _ from 'lodash';
 import moment from 'moment';
 
 export class AirportService {
   parsedData;
-  fetchPromise;
   airports;
+
   initial = {
     'data': [],
     'labels': []
@@ -17,171 +16,159 @@ export class AirportService {
     this.$q = $q;
   }
 
-  getModel() {
-    let defer = this.$q.defer();
-    defer.resolve(this.parsedData || this.fetchCsv());
-    return defer.promise;
-  }
-
+  /*
+  * This method fetch:
+  * - FlightDelays.csv: flight data from CA airports
+  * - airports-usa.json: airport codes and names
+  * This method also prepares these data to be used
+  * @return { Promise } promise to be resolved once files are fetched and parsed
+  * */
   fetchFiles() {
     console.log('fetch called');
-    console.time('fetch');
-    return this.fetchCsv().then(
-        /* success callback */
-        () => this.fetchAirportJson().then(
-          /* success callback */
-          () => console.timeEnd('fetch')
-      ),
-      /* error callback */
-      error => console.error(error)
-    );
-  }
-
-  fetchCsv() {
-    return this.$http.get('assets/FlightDelays.csv')
-    .then(
-      flightCsv => {
-        //success callback
+    console.time('fetch files');
+    return this.$q.all([
+      this.$http.get('assets/FlightDelays.csv'),
+      this.$http.get('assets/airports-usa.json')
+    ]).then(
+      ([flightCsv, airportsJson]) => {
+        console.timeEnd('fetch files');
+        console.time('parse csv');
         this.parsedData = this.parseCsv2Json(flightCsv.data);
-        this.origins = _.uniq(this.parsedData.map(airport => airport.ORIGIN));
-        this.destinations = _.uniq(this.parsedData.map(airport => airport.DEST));
-      });
+        console.timeEnd('parse csv');
+        console.time('parse json');
+        this.airports = this.parseAirportJson(airportsJson.data);
+        console.timeEnd('parse json');
+
+      }
+    )
   }
 
-  fetchAirportJson() {
-    return this.$http.get('assets/airports-usa.json')
-      .then(
-        airportsJson => {
-          this.airports = this.parseAirportJson(airportsJson.data);
-        })
-  }
-
+  /*
+  * Parses the csv into json
+  *
+  * @param { String } csv string in csv format with flights data
+  * @return { Array } flights data
+  * */
   parseCsv2Json(csv) {
     //parse into header and rows using deconstruct
     let [headers, ...rows] = csv.split('\n');
     headers = headers.split(',');
 
+    console.time('parse csv');
     //build and return a json object
     return rows.map(row => {
       return row.split(',').reduce((map, val, i) => {
         map[headers[i]] = val;
         return map;
       }, {});
-    }).map((flight) => {
-      let ratio = (flight.ARR_DELAY/flight.CRS_ELAPSED_TIME)*100;
-      return {
-        'WEEK_DAY': moment(flight.FL_DATE, 'YYYY-MM-DD').format('ddd'),
-        'CRS_DEP_TIME_INT': this.roundTime(flight.CRS_DEP_TIME+''),
-        'ARR_DELAY_BIN': Math.floor(flight.ARR_DELAY/10)*10,
-        'DELAY_RATIO': ratio,
-        'DELAY_RATIO_BIN': Math.floor(ratio/10)*10,
-        ...flight
-      }
-    }).filter(
-      flight => flight.ARR_DELAY > 0
-    );
+    });
   }
 
-  parseAirportJson(airports) {
-    return airports.map(
+  /*
+  * Picks into json to retrieve only:
+  * - iata: airport code
+  * - name: airport name
+  *
+  * @param { Array } json array of all airports data
+  * @return { Array } reduced json
+  * */
+  parseAirportJson(json) {
+    return json.map(
       airport => ({
         'code': airport.iata,
         'name': airport.name,
-        'tz': airport.tz
       })
     )
   }
 
-  getAirportOrigins(destination) {
-    let origins = this.parsedData
+
+  /*
+  * Retrieves the airports based on origin or destination
+  * if airport is omitted returns all airports
+  *
+  * @param { Object } type selector for origin or destination
+  * @param { String } airport code to airport (origin or destination)
+  * @return { Array } airports listing
+  * */
+  getAirports(type, airport) {
+    let froms = this.parsedData
       .filter(flight => {
-        if (destination) {
-          return (flight.DEST == destination)
+        if (airport) {
+          return (flight[type.from] == airport)
         }
         return true;
       })
-      .map( flight => flight.ORIGIN);
+      .map( flight => flight[type.to]);
 
-    return _.chain(origins)
+    return _.chain(froms)
       .uniq()
-      .map( origin => {
-        return _.find(this.airports, airport => {
-          return (airport.code == origin)
+      .map( airCode => {
+        return _.find(this.airports, air => {
+          return (air.code == airCode)
         })
       })
       .sortBy('name')
       .value()
   }
 
-  getAirportDestinations(origin) {
-    let dests = this.parsedData
-      .filter(flight => {
-        if (origin) {
-          return (flight.ORIGIN == origin)
-        }
-        return true;
-      })
-      .map( flight => flight.DEST);
-
-    return _.chain(dests)
-      .uniq()
-      .map( dest => {
-        return _.find(this.airports, airport => {
-          return (airport.code == dest)
-        })
-      })
-      .sortBy('name')
-      .value()
-  }
-
-  filterflights(data, origin, dest, query) {
-    return _.chain(data)
-    .filter({'ORIGIN': origin, 'DEST': dest})
-    .filter(({WEEK_DAY}) => {
-      if(!query) return true;
-      return (WEEK_DAY == query);
-    }).value()
-  }
-
-  getFlightDelays(origin, dest, query) {
+  /*
+  * Builds the graph data
+  *
+  * @param { String } origin code for origin airport
+  * @param { String } dest code for destination airport
+  * @param { Object } group selector between DELAY or DELAY RATIO
+  * @return { Array } returns two data arrays data and labels
+  * */
+  getHistogramData(origin, dest, group) {
     return _.chain(this.parsedData)
+      // selects only late arrivals
+      .filter(flight => flight.ARR_DELAY > 0)
       .filter({'ORIGIN': origin, 'DEST': dest})
-      .groupBy('ARR_DELAY_BIN')
+      .map(this.calcAdditionalParams.bind(this))
+      .groupBy(group)
       // sorts by Arrival Delay
       .reduce( (acc, value, key) => {
-        acc.push({'value': value.length, 'key': +key});
+        acc.push({'value': value.length, 'group': +key});
         return acc;
       }, [])
-      .sortBy('key')
-      // builds the series for plotting
-      .reduce( (acc, item, key) => {
-        acc.data.push(item.value)
-        acc.labels.push(`${item.key} - ${item.key+10}`);
+      .sortBy('group')
+      // builds the series for histogram
+      .reduce( (acc, item) => {
+        acc.data.push(item.value);
+        acc.labels.push(`${item.group} - ${item.group+10}`);
         return acc;
       }, _.cloneDeep(this.initial))
-      .tap(x => console.log(x))
-      .value()
+      .value();
   }
 
-  getFlightDelayRatios(origin, dest, query) {
-    return _.chain(this.parsedData)
+  /*
+  * Calculates the overall ratio (delay/elapsed time)
+  * for desired airports
+  *
+  * @param { String } origin code for origin airport
+  * @param { String } dest code for destination airport
+  * @return { Array } overall ratio (%)
+  * */
+  getOverallRatio(origin, dest) {
+    let length;
+    let sum = _.chain(this.parsedData)
       .filter({'ORIGIN': origin, 'DEST': dest})
-      .groupBy('DELAY_RATIO_BIN')
-      // sorts by Delay Ratio
-      .reduce( (acc, value, key) => {
-        acc.push({'value': value.length, 'key': +key});
-        return acc;
-      }, [])
-      .sortBy('key')
-      // builds the series for plotting
-      .reduce( (acc, item, key) => {
-        acc.data.push(item.value)
-        acc.labels.push(`${item.key}% - ${item.key+10}%`);
-        return acc;
-      }, _.cloneDeep(this.initial))
-      .value()
+      .map(this.calcAdditionalParams.bind(this))
+      .tap( set => length = set.length)
+      .reduce( (acc, item) => acc + item.DELAY_RATIO, 0)
+      .value();
+
+    return sum/length;
   }
 
+  // utility functions //
+
+  /*
+  * Utility functions to Round time in half hours
+  *
+  * @param { String } time time of departure
+  * @return { String } rounded time
+  * */
   roundTime(time) {
     let hour = time.slice(0,2);
     let min = time.slice(2,4);
@@ -191,20 +178,22 @@ export class AirportService {
     return `${hour}${min}`;
   }
 
-  getOverallRatio() {
-    return _.reduce(this.parsedData,
-      (acc, item, key) => {
-              return acc + item.DELAY_RATIO
-            }, 0)/this.parsedData.length;
-  }
-
-  getDelayDistance(origin, dest) {
-    return _.chain(this.parsedData)
-     .filter({'ORIGIN': origin, 'DEST': dest})
-     .map(
-       flight => ({x: +flight.DISTANCE, y: flight.ARR_DELAY})
-     ).sortBy('x')
-     .value();
+  /*
+  * Utility functions to calculate additional parameters
+  * to be used in graph plotting
+  *
+  * @param { Array } flight flights data
+  * @return { Array } reduced flights data
+  * */
+  calcAdditionalParams(flight) {
+      let ratio = (flight.ARR_DELAY/flight.CRS_ELAPSED_TIME)*100;
+      return {
+        'WEEK_DAY': moment(flight.FL_DATE, 'YYYY-MM-DD').format('ddd'),
+        'CRS_DEP_TIME_INT': this.roundTime(flight.CRS_DEP_TIME+''),
+        'ARR_DELAY_BIN': Math.floor(flight.ARR_DELAY/10)*10,
+        'DELAY_RATIO': ratio,
+        'DELAY_RATIO_BIN': Math.floor(ratio/10)*10,
+    }
   }
 
 }

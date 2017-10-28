@@ -1,15 +1,14 @@
+@import '../../app.scss';
+
 .nav-area {
   display: flex;
-  width: 70%;
+  width: 90vw;
+  max-width: 600px;
   height: 60px;
   justify-content: space-around;
   margin: 0 auto 30px;
 
   md-input-container {
     width: 200px;
-  }
-
-  b {
-    color: #BBD0E3;
   }
 }

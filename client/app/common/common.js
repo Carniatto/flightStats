@@ -1,8 +1,8 @@
 import angular from 'angular';
-// import { D3WrapperModule } from "./d3/d3.module";
+import {HistogramModule} from "./histogram/histogram.module";
 
 let commonModule = angular.module('app.common', [
-  // D3WrapperModule
+  HistogramModule
 ])
 .name;
 

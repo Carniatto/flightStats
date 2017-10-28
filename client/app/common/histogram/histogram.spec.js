@@ -1,10 +1,10 @@
-import SearchCardModule from './searchCard.module';
-import SearchCardTemplate from './searchCard.html';
+import HistogramModule from './histogram.module';
+import HistogramTemplate from './histogram.html';
 
-describe('SearchCard', () => {
+describe('Histogram', () => {
   let $rootScope, $componentController;
 
-  beforeEach(window.module(SearchCardModule));
+  beforeEach(window.module(HistogramModule));
 
   beforeEach(inject(($injector) => {
     $rootScope = $injector.get('$rootScope');
@@ -19,21 +19,22 @@ describe('SearchCard', () => {
     // controller specs
     let controller;
     beforeEach(() => {
-      controller = $componentController('searchCard', {
+      controller = $componentController('histogram', {
         $scope: $rootScope.$new()
       });
     });
-
+    
     it('has a name property [REMOVE]', () => { // erase if removing this.name from the controller
       expect(controller).to.have.property('name');
     });
   });
 
-  describe('View', () => {
+  describe('Template', () => {
     // template specs
     // tip: use regex to ensure correct bindings are used e.g., {{  }}
     it('has name in template [REMOVE]', () => {
-      expect(SearchCardTemplate).to.match(/{{\s?\$ctrl\.name\s?}}/g);
+      expect(HistogramTemplate).to.match(/{{\s?\$ctrl\.name\s?}}/g);
     });
   });
+
 });
