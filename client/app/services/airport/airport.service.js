@@ -38,7 +38,7 @@ export class AirportService {
   }
 
   fetchCsv() {
-    return this.$http.get('../../assets/FlightDelays.csv')
+    return this.$http.get('assets/FlightDelays.csv')
     .then(
       flightCsv => {
         //success callback
@@ -49,7 +49,7 @@ export class AirportService {
   }
 
   fetchAirportJson() {
-    return this.$http.get('../../assets/airports-usa.json')
+    return this.$http.get('assets/airports-usa.json')
       .then(
         airportsJson => {
           this.airports = this.parseAirportJson(airportsJson.data);
@@ -73,6 +73,7 @@ export class AirportService {
         'WEEK_DAY': moment(flight.FL_DATE, 'YYYY-MM-DD').format('ddd'),
         'CRS_DEP_TIME_INT': this.roundTime(flight.CRS_DEP_TIME+''),
         'ARR_DELAY_BIN': Math.floor(flight.ARR_DELAY/10)*10,
+        'DELAY_RATIO': ratio,
         'DELAY_RATIO_BIN': Math.floor(ratio/10)*10,
         ...flight
       }
@@ -188,6 +189,22 @@ export class AirportService {
     min = (Math.round(parseInt(min)/30) * 30)%60;
     min = min < 10 ? `0${min}` : `${min}`;
     return `${hour}${min}`;
+  }
+
+  getOverallRatio() {
+    return _.reduce(this.parsedData,
+      (acc, item, key) => {
+              return acc + item.DELAY_RATIO
+            }, 0)/this.parsedData.length;
+  }
+
+  getDelayDistance(origin, dest) {
+    return _.chain(this.parsedData)
+     .filter({'ORIGIN': origin, 'DEST': dest})
+     .map(
+       flight => ({x: +flight.DISTANCE, y: flight.ARR_DELAY})
+     ).sortBy('x')
+     .value();
   }
 
 }

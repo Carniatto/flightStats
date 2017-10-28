@@ -2,6 +2,12 @@ home {
  .content {
     display: flex;
     flex-direction: column;
-    justify-content: center
+    justify-content: center;
+    height: 100vh;
+ }
+
+ .title {
+     font-size: 4em;
+     color: #BBD0E3;
  }
 }

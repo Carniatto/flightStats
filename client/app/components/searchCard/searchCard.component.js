@@ -5,9 +5,6 @@ export const SearchCardComponent = {
   bindings: {},
   template,
   controller: class SearchCardController {
-    flights;
-    flightsRatio;
-    options;
 
     constructor(AirportService) {
       'ngInject';
@@ -43,11 +40,10 @@ export const SearchCardComponent = {
     fetchFlight(origin, destination) {
       this.flights = this.airService.getFlightDelays(origin, destination)
       this.flightsRatio = this.airService.getFlightDelayRatios(origin, destination)
+      this.overallRatio = this.airService.getOverallRatio(origin, destination);
     }
 
     searchData(query) {
-      console.log('origin', query.origin);
-      console.log('destination', query.destination);
       this.fetchFlight(query.origin, query.destination);
     }
   }
