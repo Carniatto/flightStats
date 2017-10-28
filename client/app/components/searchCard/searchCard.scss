@@ -1,14 +1,18 @@
 search-card {
   .content {
-    // width: 90vw;
-    // height: 80vh;
     display: flex;
     flex-direction: column;
+    transition: all 500ms;
   }
 }
 
 canvas {
-  width: 600px;
-  height: 300px;
+  width: 500px;
+  height: 200px;
   margin-bottom: 30px;
+}
+
+h2 {
+  text-align: center;
+  color: #BBD0E3;
 }

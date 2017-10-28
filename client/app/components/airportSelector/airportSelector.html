@@ -19,5 +19,7 @@
     </md-select>
   </md-input-container>
 
-  <md-button ng-click="$ctrl.search()"><b>Go!</b></md-button>
+  <md-button ng-click="$ctrl.search()" ng-disabled="!$ctrl.originAirport || !$ctrl.destinationAirport">
+    <b>Go!</b>
+  </md-button>
 </div>
