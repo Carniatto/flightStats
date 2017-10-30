@@ -17,10 +17,13 @@ export const HistogramComponent = {
       this.options = this.getHistogramOptions(this.title);
     }
 
-    $onChanges() {
-
-    }
-
+    /*
+    * builds the option object for Chartjs
+    *
+    * @param { String } xTitle title for x axis
+    *
+    * @return { Object } graph options object
+    * */
     getHistogramOptions(xTitle) {
       return {
         scales: {

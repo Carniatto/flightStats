@@ -20,8 +20,11 @@ export const AirportSelectorComponent = {
       this.allDestinations = this.airService.getAirports(AIRPORT_TYPE.DEST);
     }
 
+    /*
+    * emits a search event passign the query params
+    *
+    * */
     search() {
-      console.log('firing event!', this.originAirport, this.destinationAirport);
       this.onSearch({
         $event: {
           origin: this.originAirport,
@@ -30,10 +33,18 @@ export const AirportSelectorComponent = {
       });
     }
 
+    /*
+    * fetch airports options for origin selected
+    *
+    * */
     fetchOrigin() {
       this.possibleOrigins = this.airService.getAirports(AIRPORT_TYPE.ORIGIN, this.destinationAirport);
     }
 
+    /*
+    * fetch airports options for destination selected
+    *
+    * */
     fetchDestination() {
       this.possibleDestinations = this.airService.getAirports(AIRPORT_TYPE.DEST, this.originAirport);
     }
