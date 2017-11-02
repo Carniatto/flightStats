@@ -20,8 +20,9 @@ export const HomeComponent = {
     * @param { Object } query containing origin and destination
     * */
     searchData(query) {
-      this.flights = this.airService.getHistogramData(query.origin, query.destination, GRAPH_TYPE.DELAY);
-      this.flightsRatio = this.airService.getHistogramData(query.origin, query.destination, GRAPH_TYPE.DELAY_RATIO);
+      this.bestDay = this.airService.getBestDayAndTime(query.origin, query.destination);
+      this.flights = this.airService.getGraphData(query.origin, query.destination, 'ARR_DELAY');
+      this.flightsRatio = this.airService.getGraphData(query.origin, query.destination, 'DELAY_RATIO');
       this.overallRatio = this.airService.getOverallRatio(query.origin, query.destination);
     }
   }

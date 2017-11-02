@@ -142,6 +142,34 @@ export class AirportService {
   }
 
   /*
+  * Builds the graph data
+  *
+  * @param { String } origin code for origin airport
+  * @param { String } dest code for destination airport
+  * @param { Object } group selector between DELAY or DELAY RATIO
+  * @return { Array } returns two data arrays data and labels
+  * */
+  getGraphData(origin, dest, group) {
+    return _.chain(this.parsedData)
+      .filter({'ORIGIN': origin, 'DEST': dest})
+      .map(this.calcAdditionalParams.bind(this))
+      .groupBy('FL_DATE')
+      .map( (flights, date) => {
+        let delay = flights.reduce( (acc, flight) => {
+          return acc + parseFloat(flight[group])
+        }, 0) / flights.length;
+        return {date, delay, flights}
+      })
+      .reduce( (acc, item) => {
+        acc.data.push(item.delay);
+        acc.labels.push(item.date);
+        return acc;
+      }, _.cloneDeep(this.initial))
+      .tap( x => console.log(x))
+      .value();
+  }
+
+  /*
   * Calculates the overall ratio (delay/elapsed time)
   * for desired airports
   *
@@ -161,6 +189,33 @@ export class AirportService {
     return sum/length;
   }
 
+  /*
+  * Calculates the overall ratio (delay/elapsed time)
+  * for desired airports
+  *
+  * @param { String } origin code for origin airport
+  * @param { String } dest code for destination airport
+  * @return { Array } overall ratio (%)
+  * */
+  getBestDayAndTime(origin, dest) {
+    let flights = _.chain(this.parsedData)
+      .filter({'ORIGIN': origin, 'DEST': dest})
+      .map(this.calcAdditionalParams.bind(this))
+      .groupBy('FL_DATE')
+      .map( (flights, date) => {
+        let delay = flights.reduce( (acc, flight) => {
+          return acc + parseFloat(flight.ARR_DELAY)
+        }, 0) / flights.length;
+        return {date, delay, flights}
+      })
+      .value();
+
+    let bestDay = _.minBy(flights, 'delay');
+    let bestTime = _.minBy(bestDay.flights, 'ARR_DELAY');
+    console.log(bestDay.date, bestTime.CRS_DEP_TIME_INT);
+    return {day: bestDay.date, time: bestTime.CRS_DEP_TIME_INT};
+  }
+
   // utility functions //
 
   /*
@@ -175,7 +230,7 @@ export class AirportService {
     hour = (parseInt(hour) + (Math.round(parseInt(min)/60)))%24;
     min = (Math.round(parseInt(min)/30) * 30)%60;
     min = min < 10 ? `0${min}` : `${min}`;
-    return `${hour}${min}`;
+    return `${hour}:${min}`;
   }
 
   /*
@@ -188,11 +243,14 @@ export class AirportService {
   calcAdditionalParams(flight) {
       let ratio = (flight.ARR_DELAY/flight.CRS_ELAPSED_TIME)*100;
       return {
+        ...flight,
+        'ARR_DELAY': flight.ARR_DELAY == '' ? 0 : flight.ARR_DELAY,
         'WEEK_DAY': moment(flight.FL_DATE, 'YYYY-MM-DD').format('ddd'),
         'CRS_DEP_TIME_INT': this.roundTime(flight.CRS_DEP_TIME+''),
         'ARR_DELAY_BIN': Math.floor(flight.ARR_DELAY/10)*10,
         'DELAY_RATIO': ratio,
         'DELAY_RATIO_BIN': Math.floor(ratio/10)*10,
+
     }
   }
 
