@@ -1,0 +1,14 @@
+results {
+  .header {
+    height: 10vh;
+    text-align: center;
+  }
+  .graphs {
+    height: 50vh;
+    .graph-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+}

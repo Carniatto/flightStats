@@ -26,6 +26,9 @@ export class AirportService {
   fetchFiles() {
     console.log('fetch called');
     console.time('fetch files');
+    if(this.parsedData && this.airports) {
+      return this.$q.resolve();
+    }
     return this.$q.all([
       this.$http.get('assets/FlightDelays.csv'),
       this.$http.get('assets/airports-usa.json')

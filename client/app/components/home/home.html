@@ -1,13 +1,5 @@
 <div class="content">
-  <h1 class="title">Flight Statistics</h1>
-
   <airport-selector
     on-search="$ctrl.searchData($event)">
   </airport-selector>
-
-  <h2 ng-if="$ctrl.bestDay">You should book your flight: {{($ctrl.bestDay.day | date)}} at {{$ctrl.bestDay.time}}</h2>
-  <h2 ng-if="$ctrl.overallRatio">Overall Delay: {{($ctrl.overallRatio | number:2)}}%</h2>
-
-  <histogram data="$ctrl.flights" title="Delay (mins)"></histogram>
-  <histogram data="$ctrl.flightsRatio" title="Delay Ratio (%)"></histogram>
 </div>

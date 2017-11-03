@@ -3,8 +3,9 @@ import './histogram.scss';
 
 export const HistogramComponent = {
   bindings: {
+    onSelectDate: '&',
     data: '<',
-    title: '@'
+    title: '@',
   },
   template,
   controller: class HistogramController {
@@ -15,33 +16,47 @@ export const HistogramComponent = {
 
     $onInit() {
       this.options = this.getHistogramOptions(this.title);
+      this.fn = this.selectDate.bind(this)
     }
 
     /*
     * builds the option object for Chartjs
     *
-    * @param { String } xTitle title for x axis
+    * @param { String } yTitle title for y axis
     *
     * @return { Object } graph options object
     * */
-    getHistogramOptions(xTitle) {
+    getHistogramOptions(yTitle) {
       return {
         scales: {
           yAxes: [{
             ticks: { beginAtZero:true },
             scaleLabel: {
               display: true,
-              labelString: 'Frequency (Flight count)'
+              labelString: yTitle
             }
           }],
           xAxes: [{
             scaleLabel: {
               display: true,
-              labelString: xTitle
+              labelString: 'Days of the month'
             }
           }]
         }
       }
+    }
+
+    /*
+    * emits a search event passign the query params
+    *
+    * */
+    selectDate(event) {
+      console.log(this.onSelectDate, event)
+      this.onSelectDate({
+        $event: {
+          date: event[0]._model.label
+        }
+      });
     }
 
 

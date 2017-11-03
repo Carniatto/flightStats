@@ -1,0 +1,20 @@
+<div class="container">
+  <div class="header">
+    <h2 class="primary">{{($ctrl.bestDay.day | date)}} at {{$ctrl.bestDay.time}}</h2>
+    <p ng-if="$ctrl.bestDay">this is the best date and time</p>
+  </div>
+  <div class="graphs">
+    <div class="graph-header">
+      <md-button ui-sref="home">
+        <md-icon>arrow_back</md-icon>
+        back
+      </md-button>
+      <p ng-if="$ctrl.overallRatio">Overall Delay: {{($ctrl.overallRatio | number:2)}}%</p>
+      <md-switch ng-model="$ctrl.delayType" class="md-primary" ng-false-value="'Minutes'" ng-true-value="'Ratio (%)'">
+        Delay in {{ $ctrl.delayType }}
+      </md-switch>
+    </div>
+    <histogram data="$ctrl.flights" title="Delay (mins)" on-select-date="$ctrl.selectDate($event)" ng-if="$ctrl.delayType == 'Minutes'"></histogram>
+    <histogram data="$ctrl.flightsRatio" title="Delay Ratio (%)" on-select-date="$ctrl.selectDate($event)" ng-if="$ctrl.delayType == 'Ratio (%)'"></histogram>
+  </div>
+</div>

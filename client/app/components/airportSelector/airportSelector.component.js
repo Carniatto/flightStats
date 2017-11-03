@@ -21,7 +21,7 @@ export const AirportSelectorComponent = {
     }
 
     /*
-    * emits a search event passign the query params
+    * emits a search event passing the query params
     *
     * */
     search() {

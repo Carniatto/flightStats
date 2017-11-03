@@ -1,13 +1,9 @@
 import angular from 'angular';
 import uiRouter from 'angular-ui-router';
-import chartjs from 'angular-chart.js';
-import nvd3 from 'angular-nvd3'
-import { HomeComponent } from './home.component';
+import { ResultsComponent }  from './results.component';
 
-export const HomeModule = angular.module('home', [
-  uiRouter,
-  chartjs,
-  nvd3
+export const ResultsModule = angular.module('results', [
+  uiRouter
 ])
 
 .config(($stateProvider, $urlRouterProvider) => {
@@ -16,9 +12,9 @@ export const HomeModule = angular.module('home', [
   $urlRouterProvider.otherwise('/');
 
   $stateProvider
-    .state('home', {
-      url: '/',
-      component: 'home',
+    .state('results', {
+      url: '/results/:origin/:destination',
+      component: 'results',
       resolve: {
         csv: (AirportService) => {
           return AirportService.fetchFiles()
@@ -27,6 +23,6 @@ export const HomeModule = angular.module('home', [
     });
 })
 
-.component('home', HomeComponent)
+.component('results', ResultsComponent)
 
 .name;
