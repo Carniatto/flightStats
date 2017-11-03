@@ -5,12 +5,15 @@ export const ResultsComponent = {
   bindings: {},
   template,
   controller: class ResultsController {
-    constructor(AirportService, $stateParams) {
+    byDay = false;
+    constructor(AirportService, $stateParams, $scope, $state) {
       'ngInject';
-      this.name = 'results';
+      this.$scope = $scope;
+      this.$state = $state;
       this.airService = AirportService;
       this.origin = $stateParams['origin'];
       this.destination = $stateParams['destination'];
+      this.byDay = false;
     }
 
     $onInit() {
@@ -21,8 +24,19 @@ export const ResultsComponent = {
       this.overallRatio = this.airService.getOverallRatio(this.origin, this.destination);
     }
 
-    selectDate(date) {
-      console.log(date)
+    selectDate(event) {
+      this.flightsByDay = this.airService.getGraphDataByDay(this.origin, this.destination, 'ARR_DELAY', event.date);
+      this.flightsByDayRatio = this.airService.getGraphDataByDay(this.origin, this.destination, 'DELAY_RATIO', event.date);
+      this.byDay = true;
+      this.$scope.$apply();
+    }
+
+    back() {
+      if (this.byDay) {
+        this.byDay = false;
+      } else {
+        this.$state.go('home');
+      }
     }
   }
 };

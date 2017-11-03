@@ -5,7 +5,7 @@
   </div>
   <div class="graphs">
     <div class="graph-header">
-      <md-button ui-sref="home">
+      <md-button  ng-click="$ctrl.back()">
         <md-icon>arrow_back</md-icon>
         back
       </md-button>
@@ -14,7 +14,26 @@
         Delay in {{ $ctrl.delayType }}
       </md-switch>
     </div>
-    <histogram data="$ctrl.flights" title="Delay (mins)" on-select-date="$ctrl.selectDate($event)" ng-if="$ctrl.delayType == 'Minutes'"></histogram>
-    <histogram data="$ctrl.flightsRatio" title="Delay Ratio (%)" on-select-date="$ctrl.selectDate($event)" ng-if="$ctrl.delayType == 'Ratio (%)'"></histogram>
+    <div ng-if="!$ctrl.byDay">
+      <histogram data="$ctrl.flights"
+                 title="Delay (mins)"
+                 on-select-date="$ctrl.selectDate($event)"
+                 ng-if="$ctrl.delayType == 'Minutes'"></histogram>
+
+      <histogram data="$ctrl.flightsRatio"
+                 title="Delay Ratio (%)"
+                 on-select-date="$ctrl.selectDate($event)"
+                 ng-if="$ctrl.delayType == 'Ratio (%)'"></histogram>
+      </div>
+
+   <div ng-if="$ctrl.byDay">
+     <histogram data="$ctrl.flightsByDay"
+                  title="Delay (min)"
+                  ng-if="$ctrl.delayType == 'Minutes'"></histogram>
+
+     <histogram data="$ctrl.flightsByDayRatio"
+                title="Delay Ratio (%)"
+                ng-if="$ctrl.delayType == 'Ratio (%)'"></histogram>
+   </div>
   </div>
 </div>

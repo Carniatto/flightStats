@@ -51,7 +51,6 @@ export const HistogramComponent = {
     *
     * */
     selectDate(event) {
-      console.log(this.onSelectDate, event)
       this.onSelectDate({
         $event: {
           date: event[0]._model.label

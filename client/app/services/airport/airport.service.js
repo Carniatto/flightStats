@@ -144,6 +144,25 @@ export class AirportService {
       .value();
   }
 
+  getGraphDataByDay(origin, dest, group, date) {
+    return _.chain(this.parsedData)
+      .filter({'ORIGIN': origin, 'DEST': dest, 'FL_DATE': date})
+      .map(this.calcAdditionalParams.bind(this))
+      .groupBy('CRS_DEP_TIME_INT')
+      .map( (flights, date) => {
+        let delay = flights.reduce( (acc, flight) => {
+          return acc + parseFloat(flight[group])
+        }, 0) / flights.length;
+        return {date, delay, flights}
+      })
+      .reduce( (acc, item) => {
+        acc.data.push(item.delay);
+        acc.labels.push(item.date);
+        return acc;
+      }, _.cloneDeep(this.initial))
+      .value();
+  }
+
   /*
   * Builds the graph data
   *
@@ -168,7 +187,6 @@ export class AirportService {
         acc.labels.push(item.date);
         return acc;
       }, _.cloneDeep(this.initial))
-      .tap( x => console.log(x))
       .value();
   }
 
@@ -207,7 +225,7 @@ export class AirportService {
       .groupBy('FL_DATE')
       .map( (flights, date) => {
         let delay = flights.reduce( (acc, flight) => {
-          return acc + parseFloat(flight.ARR_DELAY)
+          return acc + flight.ARR_DELAY
         }, 0) / flights.length;
         return {date, delay, flights}
       })
@@ -215,7 +233,6 @@ export class AirportService {
 
     let bestDay = _.minBy(flights, 'delay');
     let bestTime = _.minBy(bestDay.flights, 'ARR_DELAY');
-    console.log(bestDay.date, bestTime.CRS_DEP_TIME_INT);
     return {day: bestDay.date, time: bestTime.CRS_DEP_TIME_INT};
   }
 
@@ -247,7 +264,7 @@ export class AirportService {
       let ratio = (flight.ARR_DELAY/flight.CRS_ELAPSED_TIME)*100;
       return {
         ...flight,
-        'ARR_DELAY': flight.ARR_DELAY == '' ? 0 : flight.ARR_DELAY,
+        'ARR_DELAY': flight.ARR_DELAY == '' ? 0 : parseFloat(flight.ARR_DELAY),
         'WEEK_DAY': moment(flight.FL_DATE, 'YYYY-MM-DD').format('ddd'),
         'CRS_DEP_TIME_INT': this.roundTime(flight.CRS_DEP_TIME+''),
         'ARR_DELAY_BIN': Math.floor(flight.ARR_DELAY/10)*10,
